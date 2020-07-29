@@ -22,28 +22,32 @@
     var CONFIG = {"hostname":"yoursite.com","root":"/","scheme":"Pisces","version":"8.0.0-rc.4","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false};
   </script>
 
-  <meta property="og:type" content="website">
-<meta property="og:title" content="小安的个人博客">
-<meta property="og:url" content="http://yoursite.com/index.html">
+  <meta name="description" content="SSH配置搬瓦工服务器会提供一个初始的ssh端口与一串随机的root账户密码，为了方便使用，在服务器上部署服务之前，应该更改默认的root密码为自己的密码。 首先通过ssh登陆到服务器上  ssh -p port root@ip 在kvm面板对vps进行重置系统后，ssh时可能会报错，提示 WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! 这是因为s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="搬瓦工服务器配置及L2TP&#x2F;IPsecVPN搭建">
+<meta property="og:url" content="http://yoursite.com/2020/07/29/%E6%90%AC%E7%93%A6%E5%B7%A5%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE%E5%8F%8AL2TP-IPsecVPN%E6%90%AD%E5%BB%BA/index.html">
 <meta property="og:site_name" content="小安的个人博客">
+<meta property="og:description" content="SSH配置搬瓦工服务器会提供一个初始的ssh端口与一串随机的root账户密码，为了方便使用，在服务器上部署服务之前，应该更改默认的root密码为自己的密码。 首先通过ssh登陆到服务器上  ssh -p port root@ip 在kvm面板对vps进行重置系统后，ssh时可能会报错，提示 WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED! 这是因为s">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-07-29T12:04:28.000Z">
+<meta property="article:modified_time" content="2020-07-29T12:07:45.249Z">
 <meta property="article:author" content="An Ke">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://yoursite.com/">
+<link rel="canonical" href="http://yoursite.com/2020/07/29/%E6%90%AC%E7%93%A6%E5%B7%A5%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE%E5%8F%8AL2TP-IPsecVPN%E6%90%AD%E5%BB%BA/">
 
 
 <script class="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>小安的个人博客</title>
+  <title>搬瓦工服务器配置及L2TP/IPsecVPN搭建 | 小安的个人博客</title>
   
 
 
@@ -165,7 +169,7 @@
 
   <aside class="sidebar">
 
-    <div class="sidebar-inner sidebar-overview-active">
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
       <ul class="sidebar-nav">
         <li class="sidebar-nav-toc">
           文章目录
@@ -177,6 +181,7 @@
 
       <!--noindex-->
       <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#SSH%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">SSH配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEL2TP-IPSEC%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">2.</span> <span class="nav-text">配置L2TP&#x2F;IPSEC服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9C%A8%E5%BC%80%E5%A7%8B%E9%85%8D%E7%BD%AE%E5%89%8D%EF%BC%8C%E6%9C%80%E5%A5%BD%E7%A1%AE%E8%AE%A4%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8ASELINUX%E5%A4%84%E4%BA%8E%E5%85%B3%E9%97%AD%E7%8A%B6%E6%80%81%EF%BC%8C%E4%B8%8D%E7%84%B6%E5%8F%AF%E8%83%BD%E5%87%BA%E7%8E%B0%E5%A5%87%E6%80%AA%E7%9A%84%E6%8A%A5%E9%94%99"><span class="nav-number">2.0.1.</span> <span class="nav-text">在开始配置前，最好确认服务器上SELINUX处于关闭状态，不然可能出现奇怪的报错</span></a></li></ol></li></ol></li></ol></div>
       </section>
       <!--/noindex-->
 
@@ -223,9 +228,10 @@
       <div class="main-inner">
         
 
-        <div class="content index posts-expand">
+        <div class="content post posts-expand">
           
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
@@ -241,10 +247,9 @@
       <meta itemprop="name" content="小安的个人博客">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/29/%E6%90%AC%E7%93%A6%E5%B7%A5%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%85%8D%E7%BD%AE%E5%8F%8AL2TP-IPsecVPN%E6%90%AD%E5%BB%BA/" class="post-title-link" itemprop="url">搬瓦工服务器配置及L2TP/IPsecVPN搭建</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          搬瓦工服务器配置及L2TP/IPsecVPN搭建
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -268,7 +273,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h2 id="SSH配置"><a href="#SSH配置" class="headerlink" title="SSH配置"></a>SSH配置</h2><p>搬瓦工服务器会提供一个初始的ssh端口与一串随机的root账户密码，为了方便使用，在服务器上部署服务之前，应该更改默认的root密码为自己的密码。</p>
+        <h2 id="SSH配置"><a href="#SSH配置" class="headerlink" title="SSH配置"></a>SSH配置</h2><p>搬瓦工服务器会提供一个初始的ssh端口与一串随机的root账户密码，为了方便使用，在服务器上部署服务之前，应该更改默认的root密码为自己的密码。</p>
 <p>首先通过ssh登陆到服务器上 </p>
 <p><code>ssh -p port root@ip</code></p>
 <p>在kvm面板对vps进行重置系统后，ssh时可能会报错，提示</p>
@@ -387,88 +392,30 @@
 
 <p>至此 L2TP/IPSEC vpn服务端已经搭建完成</p>
 
-      
     </div>
 
     
     
     
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/07/29/SSH%E9%80%9A%E8%BF%87%E5%AF%86%E9%92%A5%E7%99%BB%E9%99%86/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="An Ke">
-      <meta itemprop="description" content="">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="小安的个人博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/29/SSH%E9%80%9A%E8%BF%87%E5%AF%86%E9%92%A5%E7%99%BB%E9%99%86/" class="post-title-link" itemprop="url">SSH通过密钥登陆</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-              
-
-              <time title="创建时间：2020-07-29 20:03:02 / 修改时间：20:07:21" itemprop="dateCreated datePublished" datetime="2020-07-29T20:03:02+08:00">2020-07-29</time>
-            </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>最近在部署自己的个人博客到服务器上，学习了ssh的密钥登陆的相关知识，做此记录</p>
-<h3 id="创建密钥对"><a href="#创建密钥对" class="headerlink" title="创建密钥对"></a>创建密钥对</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">ssh-keygen -t rsa -C &#39;****&#39; -f ~&#x2F;.ssh&#x2F;***</span><br><span class="line">-t 指定密钥类型</span><br><span class="line">-C 设置注释，可省略</span><br><span class="line">-f 指定密钥生成路径与SSH-KEY的名字，在不同场合为生成多个密钥准备</span><br></pre></td></tr></table></figure>
-
-<h3 id="上传公钥文件到服务器"><a href="#上传公钥文件到服务器" class="headerlink" title="上传公钥文件到服务器"></a>上传公钥文件到服务器</h3><p><code>scp -P &lt;端口号&gt; ~/.ssh/id_rsa.pub &lt;用户名&gt;@&lt;ip地址&gt;:/home/id_rsa.pub</code></p>
-<h3 id="将公钥放到服务器ssh认证文件中"><a href="#将公钥放到服务器ssh认证文件中" class="headerlink" title="将公钥放到服务器ssh认证文件中"></a>将公钥放到服务器ssh认证文件中</h3><p><code>cat /home/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</code></p>
-<h3 id="配置服务器端SSH配置文件"><a href="#配置服务器端SSH配置文件" class="headerlink" title="配置服务器端SSH配置文件"></a>配置服务器端SSH配置文件</h3><p>打开RSA验证登陆 关闭密码登录</p>
-<h3 id="配置ssh配置文件"><a href="#配置ssh配置文件" class="headerlink" title="配置ssh配置文件"></a>配置ssh配置文件</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">vim ~&#x2F;.ssh&#x2F;config</span><br><span class="line">内容如下</span><br><span class="line">#github配置</span><br><span class="line">Host *** # 自定义别名</span><br><span class="line">Hostname ***** # 域名或ip</span><br><span class="line">Port     **** # ssh端口</span><br><span class="line">user   **** # ssh用户名</span><br><span class="line">IdentityFile ~&#x2F;.ssh&#x2F;*** # 公钥文件对应私钥文件</span><br></pre></td></tr></table></figure>
-
-<p>此时即可使用配置的别名登陆到服务器</p>
-
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/29/SSH%E9%80%9A%E8%BF%87%E5%AF%86%E9%92%A5%E7%99%BB%E9%99%86/" rel="prev" title="SSH通过密钥登陆">
+      <i class="fa fa-chevron-left"></i> SSH通过密钥登陆
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-
   
 
 
